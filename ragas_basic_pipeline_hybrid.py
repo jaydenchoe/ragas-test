@@ -47,8 +47,7 @@ import polars as pl
 
 
 # Providing api key for OPENAI
-os.environ["OPENAI_API_KEY"] = "sk-dhtGT81qF0TPPpTf7W3ZT3Blbk0201FJJNHLVXVB5t9AQCBkwWbk"
-os.environ["ANTHROPIC_API_KEY"]="sk-ant-api03-KLKN2hLsUtwRO9YJcgBbjT3F57hYUq63Hge1020yxL657OAC6AluRFLzWfYWgyIOJ8_-tA5oDu4UalMYXh97zQO6lw-CyEUzQAA"
+# operating by Github Action
 
 # Getting example docs into vectordb
 urls = ["https://en.wikipedia.org/wiki/Hanni_(singer)"]
