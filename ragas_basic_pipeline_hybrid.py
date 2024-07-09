@@ -47,7 +47,8 @@ import polars as pl
 
 
 # Providing api key for OPENAI
-# operating by Github Action
+#os.environ["OPENAI_API_KEY"] = 
+#os.environ["ANTHROPIC_API_KEY"]= 
 
 # Getting example docs into vectordb
 urls = ["https://en.wikipedia.org/wiki/Hanni_(singer)"]
@@ -83,7 +84,7 @@ example_generator = TestsetGenerator.from_langchain(
 my_distributions = {simple: 0.5, reasoning:0.5}
 
 ## 테스트셋 생성 
-testset = example_generator.generate_with_langchain_docs(wikis_documents, 6, distributions=my_distributions)
+testset = example_generator.generate_with_langchain_docs(wikis_documents, 5, distributions=my_distributions)
 test_df = testset.to_pandas()
 
 # select columes among question,contexts,ground_truth,evolution_type,metadata,and episode_done 
@@ -156,7 +157,7 @@ metrics = [
 evaluation_result = evaluate(
     dataset=dataset,
     metrics=metrics,
-    llm=llm_llama3,  # 이전에 정의한 Ollama LLM 사용
+    llm=llm_haiku3,  
     raise_exceptions=False
 )
 
