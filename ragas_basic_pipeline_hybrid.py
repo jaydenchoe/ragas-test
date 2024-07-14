@@ -45,10 +45,12 @@ import pandas as pd
 import plotly.express as px
 import polars as pl
 
+# 스크립트 파일의 디렉토리로 작업 디렉토리 변경
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # Providing api key for OPENAI
-#os.environ["OPENAI_API_KEY"] = 
-#os.environ["ANTHROPIC_API_KEY"]= 
+os.environ["OPENAI_API_KEY"] = ""
+os.environ["ANTHROPIC_API_KEY"]=""
 
 # Getting example docs into vectordb
 urls = ["https://en.wikipedia.org/wiki/Hanni_(singer)"]
@@ -84,11 +86,14 @@ example_generator = TestsetGenerator.from_langchain(
 my_distributions = {simple: 0.5, reasoning:0.5}
 
 ## 테스트셋 생성 
-testset = example_generator.generate_with_langchain_docs(wikis_documents, 5, distributions=my_distributions)
+testset = example_generator.generate_with_langchain_docs(wikis_documents, 2, distributions=my_distributions)
 test_df = testset.to_pandas()
 
+# Rename 'contexts' column to 'original_context' for RAGAS evaluation
+test_df.rename(columns={'contexts': 'original_contexts'}, inplace=True)
+
 # select columes among question,contexts,ground_truth,evolution_type,metadata,and episode_done 
-columns_to_show = ['question', 'ground_truth', 'contexts']  # 원하는 열 이름 select
+columns_to_show = ['question', 'ground_truth', 'original_contexts']  # 원하는 열 이름 select
 print(test_df[columns_to_show].head())
 
 # 중간 결과를 CSV 파일로 저장
@@ -124,14 +129,21 @@ qa_chain = RetrievalQA.from_chain_type(
 
 # QA 체인을 통한 답변 생성
 answers = []
+retrieved_contexts = []
 for question in test_df['question']:
     result = qa_chain({"query": question})
     answers.append(result['result'])
+    sources = result["source_documents"]
+    contents = []
+    for i in range(len(sources)):
+        contents.append(sources[i].page_content)
+    retrieved_contexts.append(contents)
 
-# 답변을 테스트셋에 추가
+# 답변과 새로운 contexts를 테스트셋에 추가
 test_df['answer'] = answers
+test_df['contexts'] = retrieved_contexts
 
-columns_to_show = ['question', 'ground_truth', 'contexts', 'answer']  # 원하는 열 이름 select
+columns_to_show = ['question', 'ground_truth', 'original_contexts', 'contexts', 'answer']  # 원하는 열 이름 select
 print(test_df[columns_to_show].head())
 
 # 답변이 추가된 테스트셋을 파일로 저장
@@ -147,9 +159,9 @@ dataset = Dataset.from_pandas(test_df)
 # 평가 메트릭 정의
 metrics = [
     faithfulness,
-    answer_relevancy,
-    context_relevancy,
-    context_recall,
+#    answer_relevancy,
+#    context_relevancy,
+#    context_recall,
     answer_correctness
 ]
 
@@ -157,35 +169,16 @@ metrics = [
 evaluation_result = evaluate(
     dataset=dataset,
     metrics=metrics,
-    llm=llm_haiku3,  
+    llm=llm35,  
     raise_exceptions=False
 )
 
-## 평가 결과 출력
-print("\n===== Ragas 평가 결과 =====")
-print(evaluation_result)
-
-# 결과를 딕셔너리를 거쳐 DataFrame으로 변환
-result_dict = {}
-for key, value in evaluation_result.items():
-    if isinstance(value, float):  # 숫자 값만 포함
-        result_dict[key] = value
-result_df = pd.DataFrame([result_dict])
+# 평가 결과를 DataFrame으로 변환
+result_df = evaluation_result.to_pandas()
+print( result_df.head())
 
 # 평가 결과를 CSV 파일로 저장
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 csv_filename = f'ragas_evaluation_results_{timestamp}.csv'
 result_df.to_csv(csv_filename, index=False)
 print(f"\n평가 결과가 '{csv_filename}' 파일로 저장되었습니다.")
-
-# 평가 점수 세부 내용 출력
-print("\n===== 세부 평가 점수 =====")
-for metric_name, score in result_dict.items():
-    if not pd.isna(score):  # NaN 값 제외
-        print(f"{metric_name}: {score:.4f}")
-    else:
-        print(f"{metric_name}: NaN (평가 실패)")
-
-# NaN 값에 대한 경고 출력
-if any(pd.isna(score) for score in result_dict.values()):
-    print("\n주의: 일부 메트릭에서 NaN 값이 발생했습니다. 이는 평가 과정에서 문제가 있었음을 나타냅니다.")
