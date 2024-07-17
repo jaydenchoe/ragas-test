@@ -153,7 +153,6 @@ test_df.to_csv(filename_with_answers, index=False)
 print(f"답변이 추가된 파일이 '{filename_with_answers}'로 저장되었습니다.")
 
 ### 평가 준비와 실행
-
 dataset = Dataset.from_pandas(test_df)
 
 # 평가 메트릭 정의
