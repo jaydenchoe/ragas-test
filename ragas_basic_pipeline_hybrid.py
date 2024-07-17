@@ -160,7 +160,7 @@ dataset = Dataset.from_pandas(test_df)
 metrics = [
     faithfulness,
 #    answer_relevancy,
-#    context_relevancy,
+    context_relevancy,
 #    context_recall,
     answer_correctness
 ]
