@@ -1,0 +1,9 @@
+# .env 파일 무시
+.env
+*.csv
+db
+db/chroma.sqlite3
+db/ebcfa6d4-d687-4dbb-8a6b-9aa30c95ddf5/data_level0.bin
+db/ebcfa6d4-d687-4dbb-8a6b-9aa30c95ddf5/header.bin
+db/ebcfa6d4-d687-4dbb-8a6b-9aa30c95ddf5/length.bin
+db/ebcfa6d4-d687-4dbb-8a6b-9aa30c95ddf5/link_lists.bin

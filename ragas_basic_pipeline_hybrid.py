@@ -45,12 +45,19 @@ import pandas as pd
 import plotly.express as px
 import polars as pl
 
+from dotenv import load_dotenv
+
+from langchain_community.document_loaders import WebBaseLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_community.vectorstores import Chroma
+from langchain_community.embeddings import OllamaEmbeddings
+
 # 스크립트 파일의 디렉토리로 작업 디렉토리 변경
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-# Providing api key for OPENAI
-os.environ["OPENAI_API_KEY"] = ""
-os.environ["ANTHROPIC_API_KEY"]=""
+# .env 파일에서 환경 변수 로드
+# Providing api keys for OPENAI and ANTHROPIC
+load_dotenv()
 
 # Getting example docs into vectordb
 urls = ["https://en.wikipedia.org/wiki/Hanni_(singer)"]
@@ -59,20 +66,17 @@ wikis_loader = WebBaseLoader(urls)
 wikis_documents = wikis_loader.load()
 #print( wikis_documents[0] )
 
-from langchain_community.document_loaders import WebBaseLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import Chroma
-from langchain_community.embeddings import OllamaEmbeddings
-
 embeddings = OpenAIEmbeddings(model="text-embedding-3-small", deployment="text-embedding-3-small")
 #embeddings = OllamaEmbeddings(model="mxbai-embed-large") # smallest but so slow!!!!
 
-llm35 = ChatOpenAI(model="gpt-3.5-turbo")
-llm4 = ChatOpenAI(model="gpt-4-turbo")
-llm_llama3 = ChatOllama(model="llama3:latest")
-llm_haiku3 = ChatAnthropic(model="claude-3-haiku-20240307")
-generator_llm = llm_llama3
-critic_llm = llm_haiku3
+llm4omini = ChatOpenAI(model="gpt-4o-mini")
+#llm4 = ChatOpenAI(model="gpt-4-turbo")
+#llm_llama3 = ChatOllama(model="llama3:latest")
+llm_llama31 = ChatOllama(model="llama3.1:latest")
+#llm_haiku3 = ChatAnthropic(model="claude-3-haiku-20240307")
+
+generator_llm = llm_llama31
+critic_llm = llm4omini
 
 example_generator=None
 example_generator = TestsetGenerator.from_langchain(
@@ -121,7 +125,7 @@ print(f"새로운 vectorstore를 생성하고 {persist_directory}에 저장했�
 
 # QA 체인 설정
 qa_chain = RetrievalQA.from_chain_type(
-    llm=llm_llama3,
+    llm=llm4omini,
     chain_type="stuff",
     retriever=vectorstore.as_retriever(),
     return_source_documents=True
@@ -168,7 +172,7 @@ metrics = [
 evaluation_result = evaluate(
     dataset=dataset,
     metrics=metrics,
-    llm=llm35,  
+    llm=llm4omini,  
     raise_exceptions=False
 )
 
